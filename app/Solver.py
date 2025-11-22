@@ -101,7 +101,7 @@ class Solver:
     ) -> float:
         """Recursive Minimax with alpha-beta pruning and tree building."""
         # Terminal node or depth limit
-        if depth == 0 or board.utility() != 0 or board.is_terminal():
+        if depth == 0 or board.is_terminal():
             val = BoardEvaluator.evaluate(board, ai_player)
             node.value = val
             return val
