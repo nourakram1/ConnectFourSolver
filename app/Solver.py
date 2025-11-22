@@ -193,7 +193,7 @@ class Solver:
 
     def _expectiminimax_min(self, board: Board, depth: int, prune: bool, ai_player: bool, nodes: List[int], node: MiniMaxTree) -> float:
         """Opponent (min) layer for expectiminimax."""
-        if depth == 0 or board.utility() != 0 or board.is_terminal():
+        if depth == 0 or board.is_terminal():
             val = BoardEvaluator.evaluate(board, ai_player)
             node.value = val
             return val
@@ -212,7 +212,7 @@ class Solver:
 
     def _expectiminimax_max(self, board: Board, depth: int, prune: bool, ai_player: bool, nodes: List[int], node: MiniMaxTree) -> float:
         """AI (max) layer for expectiminimax; contains chance nodes."""
-        if depth == 0 or board.utility() != 0 or board.is_terminal():
+        if depth == 0 or board.is_terminal():
             val = BoardEvaluator.evaluate(board, ai_player)
             node.value = val
             return val
