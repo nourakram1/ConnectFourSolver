@@ -1,7 +1,9 @@
+from pprint import pprint
+import json
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from app.Solver import Solver
-from app.Board import Board
+from backend.app.Solver import Solver
+from backend.app.Board import Board
 from util.SchemaValidator import SchemaValidator
 
 app = Flask(__name__)
@@ -41,13 +43,16 @@ def solve():
     else:
         return jsonify({"error": "Unknown algorithm"}), 400
 
-    return jsonify({
+    response_data = {
         "algorithm": algorithm,
         "best_col": best_col,
         "value": best_val,
         "nodes_expanded": nodes,
         "tree": root.to_json()
-    })
+    }
+
+    # print(json.dumps(response_data, indent=4))
+    return jsonify(response_data)
 
 if __name__ == "__main__":
     app.run(debug=True, port=5050)
