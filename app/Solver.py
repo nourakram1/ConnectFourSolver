@@ -2,9 +2,9 @@ from __future__ import annotations  # MUST be first line
 
 from typing import List, Optional, Tuple
 import math
-from Board import Board, ROWS, COLS
-from BoardEvaluator import BoardEvaluator
-from MiniMaxTree import MiniMaxTree
+from app.Board import Board, ROWS, COLS
+from app.BoardEvaluator import BoardEvaluator
+from app.MiniMaxTree import MiniMaxTree
 
 class Solver:
     """

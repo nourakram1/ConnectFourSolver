@@ -1,13 +1,20 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from app.Solver import Solver
 from app.Board import Board
 from util.SchemaValidator import SchemaValidator
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS
 
 @app.route("/solve", methods=["POST"])
 def solve():
     data = request.get_json()
+
+    # Debug: print received data
+    print("Received data:")
+    print(f"Board: {data.get('board')}")
+    print(f"Algorithm: {data.get('algorithm')}")
 
     is_valid, err, validated_data = SchemaValidator.validate(data)
     if not is_valid:
@@ -19,7 +26,11 @@ def solve():
     prune = validated_data["prune"]
     ai_player = validated_data["ai_player"]
 
-    board = Board(matrix=board_data)
+    try:
+        board = Board(matrix=board_data)
+    except ValueError as e:
+        print(f"Board validation error: {e}")
+        return jsonify({"error": str(e)}), 400
 
     solver = Solver(depth=depth, prune=prune, ai_player=ai_player)
 
@@ -39,4 +50,4 @@ def solve():
     })
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5050)

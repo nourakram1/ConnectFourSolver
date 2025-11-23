@@ -6,6 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="2dbe9aff-3c21-4e6b-8b6f-1551c98e1c26" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/BoardEvaluator.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/BoardEvaluator.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/Solver.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/Solver.py" afterDir="false" />
     </list>
     <list id="8aa4e261-8bd1-49c8-851f-70e6d3c0f358" name="Changes by HP" comment="" />
@@ -42,6 +44,7 @@
   "keyToString": {
     "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.app.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
