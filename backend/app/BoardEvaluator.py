@@ -1,5 +1,5 @@
 from typing import List
-from backend.app.Board import Board, ROWS, COLS
+from app.Board import Board, ROWS, COLS
 
 class BoardEvaluator:
     """

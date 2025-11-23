@@ -1,5 +1,5 @@
 import unittest
-from backend.app.Board import Board, ROWS, COLS
+from app.Board import Board, ROWS, COLS
 
 class BoardTest(unittest.TestCase):
 

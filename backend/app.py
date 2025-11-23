@@ -1,9 +1,7 @@
-from pprint import pprint
-import json
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from backend.app.Solver import Solver
-from backend.app.Board import Board
+from app.Solver import Solver
+from app.Board import Board
 from util.SchemaValidator import SchemaValidator
 
 app = Flask(__name__)

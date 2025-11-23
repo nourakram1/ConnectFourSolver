@@ -2,9 +2,9 @@ from __future__ import annotations  # MUST be first line
 
 from typing import List, Optional, Tuple
 import math
-from backend.app.Board import Board, ROWS, COLS
-from backend.app.BoardEvaluator import BoardEvaluator
-from backend.app.MiniMaxTree import MiniMaxTree
+from app.Board import Board, ROWS, COLS
+from app.BoardEvaluator import BoardEvaluator
+from app.MiniMaxTree import MiniMaxTree
 
 class Solver:
     """
@@ -55,6 +55,31 @@ class Solver:
         """
         prune = self.prune if use_prune is None else bool(use_prune)
         return self._choose_expectiminimax(board, self.depth, prune, self.ai_player)
+
+    def chance_outcomes_for(column: int, board: Board):
+        """Return [(column, probability)] for possible physics outcomes."""
+        outcomes = []
+
+        # Chosen column
+        chosen_valid = 0 <= column < COLS and board.free_positions[column] < ROWS
+        if chosen_valid:
+            outcomes.append((column, 0.6))
+
+        # Neighbors
+        left_valid = 0 <= column - 1 < COLS and board.free_positions[column - 1] < ROWS
+        right_valid = 0 <= column + 1 < COLS and board.free_positions[column + 1] < ROWS
+
+        if left_valid and right_valid:
+            outcomes.append((column - 1, 0.2))
+            outcomes.append((column + 1, 0.2))
+        elif left_valid:
+            outcomes.append((column - 1, 0.4))
+        elif right_valid:
+            outcomes.append((column + 1, 0.4))
+        elif chosen_valid:
+            outcomes = [(column, 1.0)]
+
+        return outcomes
 
     # -----------------------
     # Internal Minimax Methods
@@ -153,38 +178,14 @@ class Solver:
         best_val = -math.inf
         best_col = None
         alpha, beta = -math.inf, math.inf
-
-        def chance_outcomes_for(column: int):
-            """Return [(column, probability)] for possible physics outcomes."""
-            outcomes = []
-
-            # Chosen column
-            chosen_valid = 0 <= column < COLS and board.free_positions[column] < ROWS
-            if chosen_valid:
-                outcomes.append((column, 0.6))
-
-            # Neighbors
-            left_valid = 0 <= column - 1 < COLS and board.free_positions[column - 1] < ROWS
-            right_valid = 0 <= column + 1 < COLS and board.free_positions[column + 1] < ROWS
-
-            if left_valid and right_valid:
-                outcomes.append((column - 1, 0.2))
-                outcomes.append((column + 1, 0.2))
-            elif left_valid:
-                outcomes.append((column - 1, 0.4))
-            elif right_valid:
-                outcomes.append((column + 1, 0.4))
-            elif chosen_valid:
-                outcomes = [(column, 1.0)]
-
-            return outcomes
+        print(f"original depth: {depth}")
 
         for col in board.legal_moves():
             nodes[0] += 1
             chance_node = MiniMaxTree(move=col, player=None, depth=1)
             root.add_child(chance_node)
 
-            outcomes = chance_outcomes_for(col)
+            outcomes = Solver.chance_outcomes_for(col, board)
             if not outcomes:
                 continue
 
@@ -195,7 +196,7 @@ class Solver:
                 child_node = MiniMaxTree(move=actual_col, player=ai_player, prob=prob, depth=2)
                 chance_node.add_child(child_node)
 
-                val = self._expectiminimax_min(child_board, depth - 1, alpha, beta, prune, ai_player, nodes, child_node)
+                val = self._expectiminimax_min(child_board, depth - 2, alpha, beta, prune, ai_player, nodes, child_node)
                 exp_value += prob * val
 
             chance_node.value = exp_value
@@ -215,7 +216,8 @@ class Solver:
     def _expectiminimax_min(self, board: Board, depth: int, alpha: float, beta: float,
                             prune: bool, ai_player: bool, nodes: List[int], node: MiniMaxTree) -> float:
         """Opponent (min) layer for expectiminimax with pruning."""
-        if depth == 0 or board.is_terminal():
+        print(depth)
+        if depth <= 0 or board.is_terminal():
             val = BoardEvaluator.evaluate(board, ai_player)
             node.value = val
             return val
@@ -241,7 +243,7 @@ class Solver:
     def _expectiminimax_max(self, board: Board, depth: int, alpha: float, beta: float,
                             prune: bool, ai_player: bool, nodes: List[int], node: MiniMaxTree) -> float:
         """AI (max) layer for expectiminimax with pruning; contains chance nodes."""
-        if depth == 0 or board.is_terminal():
+        if depth <= 0 or board.is_terminal():
             val = BoardEvaluator.evaluate(board, ai_player)
             node.value = val
             return val
@@ -254,25 +256,17 @@ class Solver:
             chance_node = MiniMaxTree(move=col, player=None, depth=node.depth + 1)
             node.add_child(chance_node)
 
-            outcomes = []
-            if 0 <= col < COLS and board.free_positions[col] < ROWS:
-                outcomes.append((col, 0.6))
-            if 0 <= col - 1 < COLS and board.free_positions[col - 1] < ROWS:
-                outcomes.append((col - 1, 0.2))
-            if 0 <= col + 1 < COLS and board.free_positions[col + 1] < ROWS:
-                outcomes.append((col + 1, 0.2))
+            outcomes = Solver.chance_outcomes_for(col, board)
 
-            total = sum(p for _, p in outcomes)
             exp_val = 0.0
-            for actual_col, p in outcomes:
-                pnorm = p / total
+            for actual_col, prob in outcomes:
                 nodes[0] += 1
                 child_board = board.apply_action(actual_col, ai_player)
-                child_node = MiniMaxTree(move=actual_col, player=ai_player, prob=pnorm, depth=node.depth + 2)
+                child_node = MiniMaxTree(move=actual_col, player=ai_player, prob=prob, depth=node.depth + 2)
                 chance_node.add_child(child_node)
 
-                val = self._expectiminimax_min(child_board, depth - 1, alpha, beta, prune, ai_player, nodes, child_node)
-                exp_val += pnorm * val
+                val = self._expectiminimax_min(child_board, depth - 2, alpha, beta, prune, ai_player, nodes, child_node)
+                exp_val += prob * val
 
             chance_node.value = exp_val
 
