@@ -41,7 +41,7 @@ def solve():
     else:
         return jsonify({"error": "Unknown algorithm"}), 400
 
-    board = board.apply_action(best_col, not ai_player)
+    board = board.apply_action(best_col, ai_player)
     print(board)
 
     response_data = {
@@ -50,8 +50,8 @@ def solve():
         "value": best_val,
         "nodes_expanded": nodes,
         "tree": root.to_json(),
-        "AiScore": board.count_connected(False),
-        "HumanScore": board.count_connected(True)
+        "AiScore": board.count_connected(True),
+        "HumanScore": board.count_connected(False)
     }
 
     # print(json.dumps(response_data, indent=4))
