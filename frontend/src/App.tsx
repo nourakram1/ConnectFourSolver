@@ -4,6 +4,7 @@ import ControlPanel from "./components/ControlPanel";
 import ScoreBoard from "./components/ScoreBoard";
 import TreeModal from "./components/TreeModal";
 import GameStatus from "./components/GameStatus";
+import LiveScore from "./components/LiveScore";
 import { solveMove } from "./api";
 
 export default function App() {
@@ -20,8 +21,8 @@ export default function App() {
   const [score, setScore] = useState({ human: 0, ai: 0, draws: 0 });
   const [currentPlayer, setCurrentPlayer] = useState<1 | 2>(1); // 1 = human, 2 = AI
   const [gameOver, setGameOver] = useState(false);
-  const [humanCount, setHumanCount] = useState(0);
-  const [aiCount, setAiCount] = useState(0);
+  const [liveHumanScore, setLiveHumanScore] = useState(0);
+  const [liveAiScore, setLiveAiScore] = useState(0);
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [lastMove, setLastMove] = useState<{ row: number; col: number } | null>(null);
   const [nodesExpanded, setNodesExpanded] = useState(0);
@@ -35,73 +36,6 @@ export default function App() {
   // Check if column is full
   const isColumnFull = (board: number[][], col: number): boolean => {
     return board[0][col] !== 0;
-  };
-
-  // Count Connect 4s for a player
-  const countConnect4s = (board: number[][], player: number): number => {
-    let count = 0;
-
-    // Check horizontal
-    for (let row = 0; row < 6; row++) {
-      for (let col = 0; col < 4; col++) {
-        if (board[row][col] === player) {
-          if (
-            board[row][col] === board[row][col + 1] &&
-            board[row][col] === board[row][col + 2] &&
-            board[row][col] === board[row][col + 3]
-          ) {
-            count++;
-          }
-        }
-      }
-    }
-
-    // Check vertical
-    for (let row = 0; row < 3; row++) {
-      for (let col = 0; col < 7; col++) {
-        if (board[row][col] === player) {
-          if (
-            board[row][col] === board[row + 1][col] &&
-            board[row][col] === board[row + 2][col] &&
-            board[row][col] === board[row + 3][col]
-          ) {
-            count++;
-          }
-        }
-      }
-    }
-
-    // Check diagonal (top-left to bottom-right)
-    for (let row = 0; row < 3; row++) {
-      for (let col = 0; col < 4; col++) {
-        if (board[row][col] === player) {
-          if (
-            board[row][col] === board[row + 1][col + 1] &&
-            board[row][col] === board[row + 2][col + 2] &&
-            board[row][col] === board[row + 3][col + 3]
-          ) {
-            count++;
-          }
-        }
-      }
-    }
-
-    // Check diagonal (bottom-left to top-right)
-    for (let row = 3; row < 6; row++) {
-      for (let col = 0; col < 4; col++) {
-        if (board[row][col] === player) {
-          if (
-            board[row][col] === board[row - 1][col + 1] &&
-            board[row][col] === board[row - 2][col + 2] &&
-            board[row][col] === board[row - 3][col + 3]
-          ) {
-            count++;
-          }
-        }
-      }
-    }
-
-    return count;
   };
 
   // Handle human move
@@ -122,20 +56,8 @@ export default function App() {
 
         // Check if board is full
         if (isBoardFull(newBoard)) {
-          const humanConnections = countConnect4s(newBoard, 1);
-          const aiConnections = countConnect4s(newBoard, 2);
-          
-          setHumanCount(humanConnections);
-          setAiCount(aiConnections);
-          setGameOver(true);
-
-          if (humanConnections > aiConnections) {
-            setScore(prev => ({ ...prev, human: prev.human + 1 }));
-          } else if (aiConnections > humanConnections) {
-            setScore(prev => ({ ...prev, ai: prev.ai + 1 }));
-          } else {
-            setScore(prev => ({ ...prev, draws: prev.draws + 1 }));
-          }
+          // Game over - trigger AI to get final scores
+          setCurrentPlayer(2);
         } else {
           setCurrentPlayer(2);
         }
@@ -146,7 +68,7 @@ export default function App() {
 
   // Handle AI move
   const handleAiMove = async () => {
-    if (gameOver || currentPlayer !== 2 || isAiThinking) return;
+    if (currentPlayer !== 2 || isAiThinking || gameOver) return;
 
     setIsAiThinking(true);
     try {
@@ -154,8 +76,15 @@ export default function App() {
       setTreeData(result.tree);
       setNodesExpanded(result.nodes_expanded);
       setEvaluationValue(result.value);
+      
+      // Update live scores from backend
+      setLiveHumanScore(result.HumanScore);
+      setLiveAiScore(result.AiScore);
 
-      if (result.best_col !== null && result.best_col >= 0 && result.best_col < 7) {
+      // Check if game is over before making move
+      const isFull = isBoardFull(board);
+
+      if (result.best_col !== null && result.best_col >= 0 && result.best_col < 7 && !isFull) {
         // Create a deep copy of the board
         const newBoard = board.map(row => [...row]);
         
@@ -166,18 +95,14 @@ export default function App() {
             setLastMove({ row: r, col: result.best_col });
             setBoard(newBoard);
 
-            // Check if board is full
+            // Check if board is full after AI move
             if (isBoardFull(newBoard)) {
-              const humanConnections = countConnect4s(newBoard, 1);
-              const aiConnections = countConnect4s(newBoard, 2);
-              
-              setHumanCount(humanConnections);
-              setAiCount(aiConnections);
               setGameOver(true);
-
-              if (humanConnections > aiConnections) {
+              
+              // Update match score based on who won
+              if (result.HumanScore > result.AiScore) {
                 setScore(prev => ({ ...prev, human: prev.human + 1 }));
-              } else if (aiConnections > humanConnections) {
+              } else if (result.AiScore > result.HumanScore) {
                 setScore(prev => ({ ...prev, ai: prev.ai + 1 }));
               } else {
                 setScore(prev => ({ ...prev, draws: prev.draws + 1 }));
@@ -187,6 +112,18 @@ export default function App() {
             }
             break;
           }
+        }
+      } else if (isFull) {
+        // Board is full, game over
+        setGameOver(true);
+        
+        // Update match score based on who won
+        if (result.HumanScore > result.AiScore) {
+          setScore(prev => ({ ...prev, human: prev.human + 1 }));
+        } else if (result.AiScore > result.HumanScore) {
+          setScore(prev => ({ ...prev, ai: prev.ai + 1 }));
+        } else {
+          setScore(prev => ({ ...prev, draws: prev.draws + 1 }));
         }
       }
     } catch (error) {
@@ -200,21 +137,21 @@ export default function App() {
 
   // Auto-trigger AI move
   useEffect(() => {
-    if (currentPlayer === 2 && !gameOver && !isAiThinking) {
+    if (currentPlayer === 2 && !isAiThinking) {
       const timer = setTimeout(() => {
         handleAiMove();
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [currentPlayer, gameOver, board]);
+  }, [currentPlayer, board]);
 
   // Reset game
   const resetGame = () => {
     setBoard(Array(6).fill(null).map(() => Array(7).fill(0)));
     setCurrentPlayer(1);
     setGameOver(false);
-    setHumanCount(0);
-    setAiCount(0);
+    setLiveHumanScore(0);
+    setLiveAiScore(0);
     setLastMove(null);
     setTreeData(null);
     setNodesExpanded(0);
@@ -229,15 +166,6 @@ export default function App() {
     <div className="app">
       <div className="background-animation"></div>
       
-      <header className="header">
-        <h1 className="title">
-          <span className="title-connect">CONNECT</span>
-          <span className="title-four">4</span>
-          <span className="title-ai">AI</span>
-        </h1>
-        <p className="subtitle">Advanced Game Theory & Decision Algorithms</p>
-      </header>
-
       <div className="game-container">
         <div className="left-panel">
           <ScoreBoard score={score} onResetScore={resetScore} />
@@ -258,11 +186,20 @@ export default function App() {
         </div>
 
         <div className="center-panel">
+          <header className="header">
+            <h1 className="title">
+              <span className="title-connect">CONNECT</span>
+              <span className="title-four">4</span>
+              <span className="title-ai">AI</span>
+            </h1>
+            <p className="subtitle">Advanced Game Theory & Decision Algorithms</p>
+          </header>
+
           <GameStatus
             currentPlayer={currentPlayer}
             gameOver={gameOver}
-            humanCount={humanCount}
-            aiCount={aiCount}
+            humanScore={liveHumanScore}
+            aiScore={liveAiScore}
             isAiThinking={isAiThinking}
           />
           <GameBoard
@@ -278,6 +215,12 @@ export default function App() {
         </div>
 
         <div className="right-panel">
+          <LiveScore 
+            humanScore={liveHumanScore} 
+            aiScore={liveAiScore}
+            gameOver={gameOver}
+          />
+          
           <div className="info-card">
             <h3>How to Play</h3>
             <ul>

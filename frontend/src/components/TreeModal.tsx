@@ -25,9 +25,9 @@ export default function TreeModal({ data, onClose, algorithm, nodesExpanded }: P
   }, []);
 
   const getNodeColor = (nodeName: string) => {
-    if (nodeName.includes("AI(MAX)")) {
+    if (nodeName.includes("MAX")) {
       return "#ef4444"; // red for MAX
-    } else if (nodeName.includes("HUM(MIN)")) {
+    } else if (nodeName.includes("MIN")) {
       return "#fbbf24"; // yellow for MIN
     } else if (nodeName.includes("CHANCE")) {
       return "#6366f1"; // purple for CHANCE

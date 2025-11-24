@@ -30,19 +30,20 @@ class MiniMaxTree:
             node_type = "VALUE"
         else:
             if self.depth == 0:
-                node_type = "AI(MAX)"
+                node_type = "MAX"
             elif self.player is True:
-                node_type = "AI(MAX)"
+                node_type = "MAX"
             elif self.player is False:
-                node_type = "HUM(MIN)"
+                node_type = "MIN"
             else:
                 node_type = "CHANCE"
 
-        move_str = "root" if self.depth == 0 else f"col={self.move}"
-        name = f"{move_str} [{node_type}]"
+        name = f"{node_type}"
 
         attributes: Dict[str, Any] = {"value": f"{self.value:.2f}"}
 
+        if self.depth != 0:
+            attributes["col"] = f"{self.move}"
         if self.alpha is not None:
             attributes["alpha"] = f"{self.alpha:.2f}"
         if self.beta is not None:

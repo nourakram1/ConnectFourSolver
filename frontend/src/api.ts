@@ -4,6 +4,8 @@ export interface SolveResponse {
   value: number;
   nodes_expanded: number;
   tree: any;
+  AiScore: number;
+  HumanScore: number;
 }
 
 export const solveMove = async (

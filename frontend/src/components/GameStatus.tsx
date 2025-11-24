@@ -1,27 +1,27 @@
 interface Props {
   currentPlayer: 1 | 2;
   gameOver: boolean;
-  humanCount: number;
-  aiCount: number;
+  humanScore: number;
+  aiScore: number;
   isAiThinking: boolean;
 }
 
-export default function GameStatus({ currentPlayer, gameOver, humanCount, aiCount, isAiThinking }: Props) {
+export default function GameStatus({ currentPlayer, gameOver, humanScore, aiScore, isAiThinking }: Props) {
   const getStatusMessage = () => {
     if (gameOver) {
-      if (humanCount > aiCount) {
+      if (humanScore > aiScore) {
         return { 
-          text: `🎉 You Win! ${humanCount} vs ${aiCount}`, 
+          text: `🎉 You Win! ${humanScore} - ${aiScore}`, 
           class: "status-human-win" 
         };
-      } else if (aiCount > humanCount) {
+      } else if (aiScore > humanScore) {
         return { 
-          text: `AI Wins! ${aiCount} vs ${humanCount}`, 
+          text: `AI Wins! ${aiScore} - ${humanScore}`, 
           class: "status-ai-win" 
         };
       } else {
         return { 
-          text: `It's a Draw! ${humanCount} vs ${aiCount}`, 
+          text: `It's a Draw! ${humanScore} - ${aiScore}`, 
           class: "status-draw" 
         };
       }
